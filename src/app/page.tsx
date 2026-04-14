@@ -65,7 +65,7 @@ export default function HomePage() {
         gap: 20,
         width: '100%',
         maxWidth: 720,
-        alignItems: 'start',
+        alignItems: 'stretch',
       }}>
         <ModeCard
           icon={<Sparkles size={24} />}
@@ -124,6 +124,7 @@ function ModeCard({
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
+        height: '100%',
       }}
       onMouseEnter={e => {
         const el = e.currentTarget
@@ -165,7 +166,7 @@ function ModeCard({
         {description}
       </p>
       <div style={{
-        marginTop: 8,
+        marginTop: 'auto',
         fontFamily: 'var(--font-space-grotesk)',
         fontSize: 14, fontWeight: 600,
         color: accent ? '#fff' : 'var(--accent)',
