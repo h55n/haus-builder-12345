@@ -75,9 +75,12 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Variable | Description | Required |
 |---|---|---|
-| `MISTRAL_API_KEY` | Mistral AI API key from [console.mistral.ai](https://console.mistral.ai/) | ✅ Yes |
+| `MISTRAL_API_KEY` | Primary Mistral AI API key from [console.mistral.ai](https://console.mistral.ai/) | ✅ Yes* |
+| `MISTRAL_KEY` | Legacy fallback variable name (used if `MISTRAL_API_KEY` is unset or empty) | No |
 
 > **Security:** Never commit `.env.local` or any file containing real API keys. The `.gitignore` excludes all `.env*` files except `.env.example`.
+>
+> \* Configure at least one of `MISTRAL_API_KEY` or `MISTRAL_KEY`.
 
 ---
 
@@ -108,7 +111,7 @@ haus-builder/
    - **Build Command:** `next build`
    - **Output Directory:** `.next`
 4. In **Settings → Environment Variables**, add:
-   - `MISTRAL_API_KEY` (Production / Preview / Development as needed)
+   - `MISTRAL_API_KEY` (or `MISTRAL_KEY`) for Production / Preview / Development as needed
 5. Deploy
 6. Verify:
    - `npm run build` passes locally before pushing
