@@ -101,10 +101,18 @@ haus-builder/
 
 ## Deployment (Vercel)
 
-1. Push repo to GitHub
+1. Push this repo to GitHub
 2. Import project at [vercel.com/new](https://vercel.com/new)
-3. In **Environment Variables**, add `MISTRAL_API_KEY` with your real key
-4. Deploy — Vercel auto-detects Next.js, no extra config needed
+3. Keep defaults:
+   - **Framework Preset:** Next.js
+   - **Build Command:** `next build`
+   - **Output Directory:** `.next`
+4. In **Settings → Environment Variables**, add:
+   - `MISTRAL_API_KEY` (Production / Preview / Development as needed)
+5. Deploy
+6. Verify:
+   - `npm run build` passes locally before pushing
+   - Vercel deployment logs show successful `next build`
 
 ---
 
