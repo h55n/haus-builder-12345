@@ -52,8 +52,9 @@ export default function HomePage() {
           color: 'var(--text-secondary)',
           maxWidth: 420,
           lineHeight: 1.6,
+          margin: '0 auto',
         }}>
-          From blank page to furnished 3D home in under 3 minutes. No CAD skills. No sign-up.
+          Turn a blank page into a furnished 3D home in under 3 minutes.
         </p>
       </div>
 
@@ -64,6 +65,7 @@ export default function HomePage() {
         gap: 20,
         width: '100%',
         maxWidth: 720,
+        alignItems: 'start',
       }}>
         <ModeCard
           icon={<Sparkles size={24} />}
