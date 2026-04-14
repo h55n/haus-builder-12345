@@ -76,7 +76,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | Variable | Description | Required |
 |---|---|---|
 | `MISTRAL_API_KEY` | Primary Mistral AI API key from [console.mistral.ai](https://console.mistral.ai/) | ✅ Yes* |
-| `MISTRAL_KEY` | Legacy fallback variable name (used if `MISTRAL_API_KEY` is not set) | ✅ Yes* |
+| `MISTRAL_KEY` | Legacy fallback variable name (used if `MISTRAL_API_KEY` is unset or empty) | No |
 
 > **Security:** Never commit `.env.local` or any file containing real API keys. The `.gitignore` excludes all `.env*` files except `.env.example`.
 >

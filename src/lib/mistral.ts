@@ -6,7 +6,7 @@ const MISTRAL_ENV_KEYS = ['MISTRAL_API_KEY', 'MISTRAL_KEY'] as const
 function resolveMistralApiKey(): string {
   for (const keyName of MISTRAL_ENV_KEYS) {
     const value = process.env[keyName]
-    if (value?.trim()) return value
+    if (value?.trim()) return value.trim()
   }
   throw new Error(`Mistral key missing. Set one of: ${MISTRAL_ENV_KEYS.join(', ')}`)
 }
