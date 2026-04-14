@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuizStore } from '@/store/quizStore'
 import { useArchitectAgent } from '@/hooks/useArchitectAgent'
@@ -12,22 +12,27 @@ import { ArrowLeft } from 'lucide-react'
 
 export function QuizShell() {
   const router = useRouter()
-  const { currentQuestion, questionCount, isLoading, isComplete, profile } = useQuizStore()
+  const { currentQuestion, questionCount, isLoading, isComplete, profile, error } = useQuizStore()
   const { startQuiz, sendAnswer } = useQuizAgent()
   const { generateDesign } = useArchitectAgent()
+  const hasStarted = useRef(false)
+  const hasNavigated = useRef(false)
 
   // Start quiz on mount
   useEffect(() => {
+    if (hasStarted.current) return
+    hasStarted.current = true
     startQuiz()
-  }, [])
+  }, [startQuiz])
 
   // When complete — kick off design generation and go to cinematic
   useEffect(() => {
-    if (isComplete && profile) {
+    if (isComplete && profile && !hasNavigated.current) {
+      hasNavigated.current = true
       router.push('/viewer?generating=true')
       generateDesign(profile)
     }
-  }, [isComplete, profile])
+  }, [isComplete, profile, router, generateDesign])
 
   return (
     <div style={{
@@ -71,6 +76,34 @@ export function QuizShell() {
             }}>
               Thinking…
             </p>
+          )}
+
+          {error && !isLoading && (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{
+                fontFamily: 'var(--font-space-grotesk)',
+                fontSize: 14,
+                color: 'var(--orange)',
+                marginBottom: 16,
+              }}>
+                Quiz failed — {error}
+              </p>
+              <button
+                onClick={() => startQuiz()}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: 10,
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface)',
+                  color: 'var(--text-primary)',
+                  fontFamily: 'var(--font-space-grotesk)',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                }}
+              >
+                Try again
+              </button>
+            </div>
           )}
 
           {currentQuestion && (

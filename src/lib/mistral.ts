@@ -19,6 +19,23 @@ export function stripFences(raw: string): string {
     .trim()
 }
 
+function extractTextContent(raw: unknown): string {
+  if (typeof raw === 'string') return raw
+  if (Array.isArray(raw)) {
+    return raw
+      .map((block) => {
+        if (typeof block === 'string') return block
+        if (block && typeof block === 'object' && 'text' in block) {
+          const text = (block as { text?: unknown }).text
+          return typeof text === 'string' ? text : ''
+        }
+        return ''
+      })
+      .join('')
+  }
+  return ''
+}
+
 export async function callMistral(
   model: string,
   system: string,
@@ -37,7 +54,7 @@ export async function callMistral(
         messages: [{ role: 'system', content: system }, ...messages],
       })
       const raw = res.choices?.[0]?.message?.content ?? ''
-      const text = typeof raw === 'string' ? raw : JSON.stringify(raw)
+      const text = extractTextContent(raw)
       return stripFences(text)
     } catch (e) {
       lastErr = e as Error
