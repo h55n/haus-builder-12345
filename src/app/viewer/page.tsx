@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDesignStore } from '@/store/designStore'
 import { useViewerStore } from '@/store/viewerStore'
@@ -9,7 +9,7 @@ import { CinematicLoader } from '@/components/cinematic/CinematicLoader'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { ArrowLeft } from 'lucide-react'
 
-export default function ViewerPage() {
+function ViewerContent() {
   const router = useRouter()
   const params = useSearchParams()
   const design = useDesignStore(s => s.design)
@@ -182,5 +182,13 @@ export default function ViewerPage() {
         }
       `}</style>
     </div>
+  )
+}
+
+export default function ViewerPage() {
+  return (
+    <Suspense fallback={<div style={{ width: '100vw', height: '100vh', background: 'var(--viewer-bg)' }} />}>
+      <ViewerContent />
+    </Suspense>
   )
 }
