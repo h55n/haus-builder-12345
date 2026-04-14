@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Space+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg:            #FDF8E2;
+  --surface:       #FFFFFF;
+  --surface-2:     #F5F0D8;
+  --border:        rgba(196,195,227,0.35);
+  --border-strong: rgba(80,78,118,0.4);
+  --text-primary:  #1A1828;
+  --text-secondary:#504E76;
+  --text-muted:    rgba(80,78,118,0.55);
+  --accent:        #1A56DB;
+  --accent-hover:  #1344B8;
+  --accent-soft:   rgba(26,86,219,0.12);
+  --violet-light:  #C4C3E3;
+  --violet-dark:   #504E76;
+  --sage:          #A3B565;
+  --peach:         #FCDD9D;
+  --orange:        #F1642E;
+  --glass-bg:      rgba(253,248,226,0.68);
+  --glass-border:  rgba(196,195,227,0.35);
+  --viewer-bg:     #EDE8D0;
+  --font-cormorant:     'Cormorant Garamond', Georgia, serif;
+  --font-space-grotesk: 'Space Grotesk', system-ui, sans-serif;
+  --font-space-mono:    'Space Mono', monospace;
+}
+
+.dark {
+  --bg:            #0E0D14;
+  --surface:       #16141F;
+  --surface-2:     #1E1B2E;
+  --border:        rgba(196,195,227,0.12);
+  --border-strong: rgba(196,195,227,0.25);
+  --text-primary:  #EDE9F5;
+  --text-secondary:#C4C3E3;
+  --text-muted:    rgba(196,195,227,0.45);
+  --glass-bg:      rgba(14,13,20,0.75);
+  --glass-border:  rgba(196,195,227,0.14);
+  --viewer-bg:     #0E0D14;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-space-grotesk);
+  -webkit-font-smoothing: antialiased;
+  height: 100%;
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-sm {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  border: 1px solid var(--glass-border);
+}
+
+.font-cormorant { font-family: var(--font-cormorant); }
+.font-mono-space { font-family: var(--font-space-mono); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* focus */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* transitions */
+.transition-theme {
+  transition: background 200ms ease, color 200ms ease, border-color 200ms ease;
+}
