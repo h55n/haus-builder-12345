@@ -20,13 +20,6 @@ function ViewerContent() {
   const isAIMode = params.get('generating') === 'true'
   const [showCinematic, setShowCinematic] = useState(isAIMode)
 
-  // When design arrives, signal cinematic to finish
-  useEffect(() => {
-    if (design && isAIMode) {
-      localStorage.setItem('haus-design-ready', 'true')
-    }
-  }, [design, isAIMode])
-
   // If not AI mode (manual builder redirect), show viewer directly
   useEffect(() => {
     if (!isAIMode) setShowCinematic(false)

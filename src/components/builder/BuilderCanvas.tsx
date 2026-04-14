@@ -2,16 +2,47 @@
 import { useDroppable } from '@dnd-kit/core'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
-import { Suspense, useMemo } from 'react'
+import { ThreeEvent } from '@react-three/fiber'
+import { Suspense, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useBuilderStore } from '@/store/builderStore'
 import { useViewerStore } from '@/store/viewerStore'
 import { FurnitureFactory } from '@/components/viewer/FurnitureFactory'
 import type { FurnitureItem } from '@/types'
 
+type PointerCaptureTarget = Element & {
+  setPointerCapture: (id: number) => void
+  releasePointerCapture: (id: number) => void
+}
+const PRIMARY_BUTTON = 1
+
+function asPointerCaptureTarget(target: EventTarget | null): PointerCaptureTarget | null {
+  if (!target || !(target instanceof Element)) return null
+  if (!('setPointerCapture' in target) || !('releasePointerCapture' in target)) return null
+  return target as PointerCaptureTarget
+}
+
 export function BuilderCanvas() {
   const { setNodeRef } = useDroppable({ id: 'canvas-drop-zone' })
-  const { items, selectedId, selectItem } = useBuilderStore()
+  const { items, selectedId, selectItem, updateItem } = useBuilderStore()
+  const { snapEnabled } = useViewerStore()
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+
+  const snap = (v: number) => (snapEnabled ? Math.round(v * 2) / 2 : v)
+
+  const handleDragStart = (id: string) => {
+    selectItem(id)
+    setDraggingId(id)
+  }
+
+  const handleDragMove = (x: number, z: number) => {
+    if (!draggingId) return
+    updateItem(draggingId, { position: { x: snap(x), z: snap(z) } })
+  }
+
+  const handleDragEnd = () => {
+    setDraggingId(null)
+  }
 
   return (
     <div
@@ -35,7 +66,7 @@ export function BuilderCanvas() {
           <hemisphereLight args={['#C4C3E3', '#A3B565', 0.35]} />
 
           <PerspectiveCamera makeDefault position={[22, 18, 22]} fov={45} />
-          <OrbitControls makeDefault enableDamping dampingFactor={0.04} />
+          <OrbitControls makeDefault enableDamping dampingFactor={0.04} enabled={!draggingId} />
 
           <gridHelper args={[60, 60, 'rgba(80,78,118,0.08)', 'rgba(80,78,118,0.04)']} position={[0, -0.01, 0]} />
 
@@ -52,12 +83,22 @@ export function BuilderCanvas() {
               item={item}
               selected={item.id === selectedId}
               onSelect={() => selectItem(item.id === selectedId ? null : item.id)}
+              onDragStart={() => handleDragStart(item.id)}
+              onDragMove={(x, z) => handleDragMove(x, z)}
+              onDragEnd={handleDragEnd}
             />
           ))}
+
+          {draggingId && (
+            <DragPlane
+              onMove={(x, z) => handleDragMove(x, z)}
+              onEnd={handleDragEnd}
+            />
+          )}
         </Suspense>
       </Canvas>
 
-      {/* Keyboard hint */}
+      {/* Contextual hint */}
       {selectedId && (
         <div className="glass-sm" style={{
           position: 'absolute', bottom: 100, left: '50%',
@@ -67,19 +108,22 @@ export function BuilderCanvas() {
           fontSize: 10, color: 'var(--text-muted)',
           letterSpacing: '0.06em', pointerEvents: 'none',
         }}>
-          DELETE — remove · ESC — deselect
+          {draggingId ? 'MOVING — release to place' : 'DRAG TO MOVE · DELETE — remove · ESC — deselect'}
         </div>
       )}
     </div>
   )
 }
 
-function BuilderItemMesh({ item, selected, onSelect }: {
+function BuilderItemMesh({ item, selected, onSelect, onDragStart, onDragMove, onDragEnd }: {
   item: ReturnType<typeof useBuilderStore.getState>['items'][0]
   selected: boolean
   onSelect: () => void
+  onDragStart: () => void
+  onDragMove: (x: number, z: number) => void
+  onDragEnd: () => void
 }) {
-  const { removeItem, updateItem } = useBuilderStore()
+  const dragMoved = useRef(false)
   const { w, d, h } = item.dimensions
 
   const isRoom = item.assetType === 'room'
@@ -92,11 +136,36 @@ function BuilderItemMesh({ item, selected, onSelect }: {
     dimensions: item.dimensions,
   }), [item])
 
+  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation()
+    dragMoved.current = false
+    asPointerCaptureTarget(e.target)?.setPointerCapture(e.pointerId)
+    onDragStart()
+  }
+
+  const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
+    // `buttons` is a bitmask; `& PRIMARY_BUTTON` checks that the primary button (left mouse / touch) is active.
+    if ((e.buttons & PRIMARY_BUTTON) === 0) return
+    e.stopPropagation()
+    dragMoved.current = true
+    onDragMove(e.point.x, e.point.z)
+  }
+
+  const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation()
+    asPointerCaptureTarget(e.target)?.releasePointerCapture(e.pointerId)
+    if (!dragMoved.current) onSelect()
+    dragMoved.current = false
+    onDragEnd()
+  }
+
   return (
     <group
       position={[item.position.x, 0, item.position.z]}
       rotation={[0, (item.rotation * Math.PI) / 180, 0]}
-      onClick={(e) => { e.stopPropagation(); onSelect() }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
     >
       {isRoom ? (
         // Render room as colored box
@@ -122,5 +191,25 @@ function BuilderItemMesh({ item, selected, onSelect }: {
         </mesh>
       )}
     </group>
+  )
+}
+
+function DragPlane({ onMove, onEnd }: { onMove: (x: number, z: number) => void; onEnd: () => void }) {
+  return (
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, 0.005, 0]}
+      onPointerMove={(e) => {
+        e.stopPropagation()
+        onMove(e.point.x, e.point.z)
+      }}
+      onPointerUp={(e) => {
+        e.stopPropagation()
+        onEnd()
+      }}
+    >
+      <planeGeometry args={[300, 300]} />
+      <meshBasicMaterial transparent opacity={0} />
+    </mesh>
   )
 }

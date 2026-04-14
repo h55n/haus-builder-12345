@@ -1,5 +1,7 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useDesignStore } from '@/store/designStore'
 
 const STAGES = [
   'Reading your brief…',
@@ -9,11 +11,18 @@ const STAGES = [
   'Furnishing interiors…',
   'Final touches…',
 ]
+const GENERATION_TIMEOUT_MS = 90000
 
 export function CinematicLoader({ onDone }: { onDone: () => void }) {
+  const router = useRouter()
+  const design = useDesignStore(s => s.design)
+  const isGenerating = useDesignStore(s => s.isGenerating)
+  const designError = useDesignStore(s => s.error)
   const [stageIdx, setStageIdx] = useState(0)
   const [progress, setProgress] = useState(0)
   const [done, setDone] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const sawGenerating = useRef(false)
 
   useEffect(() => {
     // Cycle stage labels every 2s
@@ -37,22 +46,40 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
 
   // When design is ready, finish bar and call onDone
   useEffect(() => {
-    if (done) return
-    const check = setInterval(() => {
-      // Check if design is in store
-      try {
-        const raw = localStorage.getItem('haus-design-ready')
-        if (raw === 'true') {
-          setProgress(100)
-          setDone(true)
-          localStorage.removeItem('haus-design-ready')
-          setTimeout(onDone, 600)
-          clearInterval(check)
-        }
-      } catch {}
-    }, 300)
-    return () => clearInterval(check)
-  }, [done, onDone])
+    if (done || error) return
+    if (isGenerating) {
+      sawGenerating.current = true
+      return
+    }
+    if (design) {
+      setProgress(100)
+      setDone(true)
+      const timer = setTimeout(onDone, 600)
+      return () => clearTimeout(timer)
+    }
+    if (designError) {
+      setError(designError)
+      return
+    }
+    if (sawGenerating.current && !design) {
+      const timer = setTimeout(() => {
+        setError('Design generation did not complete.')
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [done, error, design, isGenerating, designError, onDone])
+
+  useEffect(() => {
+    if (done || error || design) return
+    const timer = setTimeout(() => {
+      setError(`Design generation timed out after ${Math.floor(GENERATION_TIMEOUT_MS / 1000)} seconds.`)
+    }, GENERATION_TIMEOUT_MS)
+    return () => clearTimeout(timer)
+  }, [done, error, design])
+
+  if (error) {
+    return <ErrorScreen error={error} onRetry={() => router.push('/quiz')} onHome={() => router.push('/')} />
+  }
 
   return (
     <div style={{
@@ -113,6 +140,72 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
       }}>
         {Math.round(progress)}%
       </p>
+    </div>
+  )
+}
+
+function ErrorScreen({ error, onRetry, onHome }: { error: string; onRetry: () => void; onHome: () => void }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: '#0E0D14',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 100,
+      padding: 24,
+    }}>
+      <p style={{
+        fontFamily: 'var(--font-cormorant)',
+        fontSize: 36,
+        color: 'var(--text-primary)',
+        marginBottom: 10,
+      }}>
+        Generation failed
+      </p>
+      <p style={{
+        fontFamily: 'var(--font-space-grotesk)',
+        fontSize: 14,
+        color: 'var(--orange)',
+        marginBottom: 24,
+        textAlign: 'center',
+      }}>
+        {error}
+      </p>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          onClick={onRetry}
+          style={{
+            padding: '10px 16px',
+            borderRadius: 10,
+            border: '1px solid var(--border)',
+            background: 'var(--accent)',
+            color: '#fff',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-space-grotesk)',
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+        >
+          Try again
+        </button>
+        <button
+          onClick={onHome}
+          style={{
+            padding: '10px 16px',
+            borderRadius: 10,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            color: 'var(--text-primary)',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-space-grotesk)',
+            fontSize: 13,
+          }}
+        >
+          Home
+        </button>
+      </div>
     </div>
   )
 }
