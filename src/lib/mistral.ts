@@ -1,4 +1,4 @@
-import Mistral from '@mistralai/mistralai'
+import { Mistral } from '@mistralai/mistralai'
 
 let _client: Mistral | null = null
 
