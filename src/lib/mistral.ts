@@ -1,11 +1,19 @@
 import { Mistral } from '@mistralai/mistralai'
 
 let _client: Mistral | null = null
+const MISTRAL_ENV_KEYS = ['MISTRAL_API_KEY', 'MISTRAL_KEY'] as const
+
+function resolveMistralApiKey(): string {
+  for (const keyName of MISTRAL_ENV_KEYS) {
+    const value = process.env[keyName]
+    if (value?.trim()) return value
+  }
+  throw new Error(`Mistral key missing. Set one of: ${MISTRAL_ENV_KEYS.join(', ')}`)
+}
 
 export function getMistral(): Mistral {
   if (!_client) {
-    const key = process.env.MISTRAL_API_KEY
-    if (!key) throw new Error('MISTRAL_API_KEY not set')
+    const key = resolveMistralApiKey()
     _client = new Mistral({ apiKey: key })
   }
   return _client
