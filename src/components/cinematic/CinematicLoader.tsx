@@ -11,6 +11,7 @@ const STAGES = [
   'Furnishing interiors…',
   'Final touches…',
 ]
+const GENERATION_TIMEOUT_MS = 90000
 
 export function CinematicLoader({ onDone }: { onDone: () => void }) {
   const router = useRouter()
@@ -61,15 +62,18 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
       return
     }
     if (sawGenerating.current && !design) {
-      setError('Design generation did not complete.')
+      const timer = setTimeout(() => {
+        setError('Design generation did not complete.')
+      }, 300)
+      return () => clearTimeout(timer)
     }
   }, [done, error, design, isGenerating, designError, onDone])
 
   useEffect(() => {
     if (done || error || design) return
     const timer = setTimeout(() => {
-      setError('Design generation timed out after 90 seconds.')
-    }, 90_000)
+      setError(`Design generation timed out after ${Math.floor(GENERATION_TIMEOUT_MS / 1000)} seconds.`)
+    }, GENERATION_TIMEOUT_MS)
     return () => clearTimeout(timer)
   }, [done, error, design])
 

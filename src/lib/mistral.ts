@@ -19,6 +19,11 @@ export function stripFences(raw: string): string {
     .trim()
 }
 
+/**
+ * Mistral responses can be a plain string or an array of typed blocks
+ * (for example: [{ type: 'text', text: '...' }]).
+ * This extracts only text payloads into a normalized string.
+ */
 function extractTextContent(raw: unknown): string {
   if (typeof raw === 'string') return raw
   if (Array.isArray(raw)) {
@@ -26,7 +31,7 @@ function extractTextContent(raw: unknown): string {
       .map((block) => {
         if (typeof block === 'string') return block
         if (block && typeof block === 'object' && 'text' in block) {
-          const text = (block as { text?: unknown }).text
+          const text = block.text
           return typeof text === 'string' ? text : ''
         }
         return ''

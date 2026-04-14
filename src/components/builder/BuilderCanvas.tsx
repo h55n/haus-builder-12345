@@ -10,6 +10,18 @@ import { useViewerStore } from '@/store/viewerStore'
 import { FurnitureFactory } from '@/components/viewer/FurnitureFactory'
 import type { FurnitureItem } from '@/types'
 
+type PointerCaptureTarget = Element & {
+  setPointerCapture: (id: number) => void
+  releasePointerCapture: (id: number) => void
+}
+const PRIMARY_BUTTON = 1
+
+function asPointerCaptureTarget(target: EventTarget | null): PointerCaptureTarget | null {
+  if (!target || !(target instanceof Element)) return null
+  if (!('setPointerCapture' in target) || !('releasePointerCapture' in target)) return null
+  return target as PointerCaptureTarget
+}
+
 export function BuilderCanvas() {
   const { setNodeRef } = useDroppable({ id: 'canvas-drop-zone' })
   const { items, selectedId, selectItem, updateItem } = useBuilderStore()
@@ -127,15 +139,13 @@ function BuilderItemMesh({ item, selected, onSelect, onDragStart, onDragMove, on
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
     dragMoved.current = false
-    const target = e.target as Element | null
-    if (target && 'setPointerCapture' in target) {
-      ;(target as Element & { setPointerCapture: (id: number) => void }).setPointerCapture(e.pointerId)
-    }
+    asPointerCaptureTarget(e.target)?.setPointerCapture(e.pointerId)
     onDragStart()
   }
 
   const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
-    if (!(e.buttons & 1)) return
+    // `buttons` is a bitmask; `& PRIMARY_BUTTON` checks that the primary button (left mouse / touch) is active.
+    if ((e.buttons & PRIMARY_BUTTON) === 0) return
     e.stopPropagation()
     dragMoved.current = true
     onDragMove(e.point.x, e.point.z)
@@ -143,11 +153,9 @@ function BuilderItemMesh({ item, selected, onSelect, onDragStart, onDragMove, on
 
   const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
-    const target = e.target as Element | null
-    if (target && 'releasePointerCapture' in target) {
-      ;(target as Element & { releasePointerCapture: (id: number) => void }).releasePointerCapture(e.pointerId)
-    }
+    asPointerCaptureTarget(e.target)?.releasePointerCapture(e.pointerId)
     if (!dragMoved.current) onSelect()
+    dragMoved.current = false
     onDragEnd()
   }
 
@@ -201,7 +209,7 @@ function DragPlane({ onMove, onEnd }: { onMove: (x: number, z: number) => void; 
       }}
     >
       <planeGeometry args={[300, 300]} />
-      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      <meshBasicMaterial transparent opacity={0} />
     </mesh>
   )
 }
