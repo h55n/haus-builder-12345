@@ -10,17 +10,7 @@ import { useViewerStore } from '@/store/viewerStore'
 import { FurnitureFactory } from '@/components/viewer/FurnitureFactory'
 import type { FurnitureItem } from '@/types'
 
-type PointerCaptureTarget = Element & {
-  setPointerCapture: (id: number) => void
-  releasePointerCapture: (id: number) => void
-}
 const PRIMARY_BUTTON = 1
-
-function asPointerCaptureTarget(target: EventTarget | null): PointerCaptureTarget | null {
-  if (!target || !(target instanceof Element)) return null
-  if (!('setPointerCapture' in target) || !('releasePointerCapture' in target)) return null
-  return target as PointerCaptureTarget
-}
 
 export function BuilderCanvas() {
   const { setNodeRef } = useDroppable({ id: 'canvas-drop-zone' })
@@ -108,7 +98,7 @@ export function BuilderCanvas() {
           fontSize: 10, color: 'var(--text-muted)',
           letterSpacing: '0.06em', pointerEvents: 'none',
         }}>
-          {draggingId ? 'MOVING — release to place' : 'DRAG TO MOVE · DELETE — remove · ESC — deselect'}
+          {draggingId ? 'MOVING — release to place' : 'DRAG TO MOVE · [ / ] OR R ROTATE · DELETE remove · ESC deselect'}
         </div>
       )}
     </div>
@@ -124,6 +114,8 @@ function BuilderItemMesh({ item, selected, onSelect, onDragStart, onDragMove, on
   onDragEnd: () => void
 }) {
   const dragMoved = useRef(false)
+  const groundPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), [])
+  const dragPointRef = useRef(new THREE.Vector3())
   const { w, d, h } = item.dimensions
 
   const isRoom = item.assetType === 'room'
@@ -139,7 +131,6 @@ function BuilderItemMesh({ item, selected, onSelect, onDragStart, onDragMove, on
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
     dragMoved.current = false
-    asPointerCaptureTarget(e.target)?.setPointerCapture(e.pointerId)
     onDragStart()
   }
 
@@ -148,12 +139,13 @@ function BuilderItemMesh({ item, selected, onSelect, onDragStart, onDragMove, on
     if ((e.buttons & PRIMARY_BUTTON) === 0) return
     e.stopPropagation()
     dragMoved.current = true
-    onDragMove(e.point.x, e.point.z)
+    if (e.ray.intersectPlane(groundPlane, dragPointRef.current)) {
+      onDragMove(dragPointRef.current.x, dragPointRef.current.z)
+    }
   }
 
   const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
-    asPointerCaptureTarget(e.target)?.releasePointerCapture(e.pointerId)
     if (!dragMoved.current) onSelect()
     dragMoved.current = false
     onDragEnd()

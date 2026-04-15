@@ -1,6 +1,9 @@
 import React, { memo } from 'react'
 import type { FurnitureItem } from '@/types'
-import { Bed, Sofa, Desk, DiningSet, KitchenCounter, Bathtub, Toilet, Wardrobe, Bookshelf, Plant, Lamp, Stair } from './furniture'
+import {
+  Bed, Sofa, Desk, DiningSet, KitchenCounter, Bathtub, Toilet, Wardrobe, Bookshelf, Plant, Lamp, Stair,
+  Refrigerator, DiningChair, Mirror, TableTop, KitchenTop,
+} from './furniture'
 
 interface Props {
   item: FurnitureItem
@@ -35,6 +38,11 @@ function FurniturePiece({ item }: { item: FurnitureItem }) {
     case 'plant': return <Plant />
     case 'lamp': return <Lamp />
     case 'stair': return <Stair />
+    case 'refrigerator': return <Refrigerator />
+    case 'dining-chair': return <DiningChair />
+    case 'mirror': return <Mirror />
+    case 'table-top': return <TableTop />
+    case 'kitchen-top': return <KitchenTop />
     default: return (
       <mesh castShadow>
         <boxGeometry args={[item.dimensions.w, item.dimensions.h, item.dimensions.d]} />

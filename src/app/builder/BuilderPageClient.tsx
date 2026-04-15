@@ -10,9 +10,13 @@ import { BuilderCanvas } from '@/components/builder/BuilderCanvas'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { ArrowLeft, Undo2, Redo2, Grid2x2, Sparkles } from 'lucide-react'
 
+function normalizeRotation(angle: number) {
+  return ((angle % 360) + 360) % 360
+}
+
 export default function BuilderPage() {
   const router = useRouter()
-  const { addItem, undo, redo, selectedId, removeItem, toDesignSpec } = useBuilderStore()
+  const { addItem, undo, redo, selectedId, removeItem, updateItem, toDesignSpec } = useBuilderStore()
   const { setDesign } = useDesignStore()
   const { snapEnabled, toggleSnap } = useViewerStore()
 
@@ -26,7 +30,13 @@ export default function BuilderPage() {
     const data = active.data.current as { asset: { id: string; label: string; w: number; d: number; h?: number }; category: string }
     if (!data) return
 
-    const assetType = data.category === 'ROOMS' ? 'room' : data.category === 'FURNITURE' ? 'furniture' : 'wall'
+    const assetType = data.category === 'ROOMS'
+      ? 'room'
+      : data.category === 'FURNITURE'
+        ? 'furniture'
+        : data.category === 'OPENINGS'
+          ? 'opening'
+          : 'wall'
 
     addItem({
       assetType,
@@ -50,6 +60,31 @@ export default function BuilderPage() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [undo, redo, selectedId, removeItem])
+
+  const rotateSelected = useCallback((delta: number) => {
+    if (!selectedId) return
+    const item = useBuilderStore.getState().items.find((entry) => entry.id === selectedId)
+    if (!item) return
+    const next = normalizeRotation(item.rotation + delta)
+    updateItem(selectedId, { rotation: next })
+  }, [selectedId, updateItem])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.target instanceof HTMLInputElement) || (e.target instanceof HTMLTextAreaElement)) return
+      if (!selectedId) return
+      if (e.key.toLowerCase() === 'r' || e.key === ']') {
+        e.preventDefault()
+        rotateSelected(15)
+      }
+      if (e.key === '[') {
+        e.preventDefault()
+        rotateSelected(-15)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [selectedId, rotateSelected])
 
   const handleRefineWithAI = async () => {
     const spec = toDesignSpec()
@@ -98,6 +133,15 @@ export default function BuilderPage() {
                 <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: 9, letterSpacing: '0.08em' }}>
                   SNAP
                 </span>
+              </ToolBtn>
+
+              <ToolDivider />
+
+              <ToolBtn onClick={() => rotateSelected(-15)} title="Rotate left ([)" active={false}>
+                <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: 11 }}>↺ 15°</span>
+              </ToolBtn>
+              <ToolBtn onClick={() => rotateSelected(15)} title="Rotate right (] / R)" active={false}>
+                <span style={{ fontFamily: 'var(--font-space-mono)', fontSize: 11 }}>↻ 15°</span>
               </ToolBtn>
             </div>
 
