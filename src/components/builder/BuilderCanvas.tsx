@@ -115,7 +115,7 @@ function BuilderItemMesh({ item, selected, onSelect, onDragStart, onDragMove, on
 }) {
   const dragMoved = useRef(false)
   const groundPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), [])
-  const dragPoint = useMemo(() => new THREE.Vector3(), [])
+  const dragPointRef = useRef(new THREE.Vector3())
   const { w, d, h } = item.dimensions
 
   const isRoom = item.assetType === 'room'
@@ -139,8 +139,8 @@ function BuilderItemMesh({ item, selected, onSelect, onDragStart, onDragMove, on
     if ((e.buttons & PRIMARY_BUTTON) === 0) return
     e.stopPropagation()
     dragMoved.current = true
-    if (e.ray.intersectPlane(groundPlane, dragPoint)) {
-      onDragMove(dragPoint.x, dragPoint.z)
+    if (e.ray.intersectPlane(groundPlane, dragPointRef.current)) {
+      onDragMove(dragPointRef.current.x, dragPointRef.current.z)
     }
   }
 

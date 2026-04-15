@@ -13,7 +13,7 @@ export function useArchitectAgent() {
     setGenerating(true)
     setError(null)
     const controller = new AbortController()
-    const timeoutId = window.setTimeout(() => controller.abort('design-timeout'), DESIGN_REQUEST_TIMEOUT_MS)
+    const timeoutId = window.setTimeout(() => controller.abort(new Error('design-timeout')), DESIGN_REQUEST_TIMEOUT_MS)
     try {
       const res = await fetch('/api/agent/design', {
         method: 'POST',

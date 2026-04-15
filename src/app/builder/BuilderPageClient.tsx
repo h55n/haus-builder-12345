@@ -10,6 +10,10 @@ import { BuilderCanvas } from '@/components/builder/BuilderCanvas'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { ArrowLeft, Undo2, Redo2, Grid2x2, Sparkles } from 'lucide-react'
 
+function normalizeRotation(angle: number) {
+  return ((angle % 360) + 360) % 360
+}
+
 export default function BuilderPage() {
   const router = useRouter()
   const { addItem, undo, redo, selectedId, removeItem, updateItem, toDesignSpec } = useBuilderStore()
@@ -61,7 +65,7 @@ export default function BuilderPage() {
     if (!selectedId) return
     const item = useBuilderStore.getState().items.find((entry) => entry.id === selectedId)
     if (!item) return
-    const next = ((item.rotation + delta) % 360 + 360) % 360
+    const next = normalizeRotation(item.rotation + delta)
     updateItem(selectedId, { rotation: next })
   }, [selectedId, updateItem])
 

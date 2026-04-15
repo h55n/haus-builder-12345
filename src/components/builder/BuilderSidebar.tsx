@@ -194,9 +194,7 @@ export function BuilderSidebar() {
 
 const TYPE_ALIASES: Record<string, string[]> = {
   fridge: ['refrigerator'],
-  refrigerator: ['fridge'],
   chair: ['diningchair', 'dining-chair'],
-  mirror: ['mirror'],
   tabletop: ['table-top', 'table'],
   table: ['tabletop', 'table-top'],
   kitchentop: ['kitchen-top', 'kitchencounter', 'counter'],
