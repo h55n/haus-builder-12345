@@ -38,10 +38,15 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
     // Progress bar: fill quickly to 92%, then keep slowly moving so it doesn't look stuck
     const start = Date.now()
     const progressTimer = setInterval(() => {
+      const updateProgress = (value: number) => {
+        // Guard against any backwards movement from timer jitter/phase boundaries.
+        setProgress(prev => Math.max(prev, Math.min(value, SLOW_PROGRESS_CAP)))
+      }
+
       const elapsed = Date.now() - start
       if (elapsed <= FAST_PROGRESS_MS) {
         const p = Math.min((elapsed / FAST_PROGRESS_MS) * FAST_PROGRESS_CAP, FAST_PROGRESS_CAP)
-        setProgress(prev => Math.max(prev, p))
+        updateProgress(p)
         return
       }
 
@@ -49,8 +54,8 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
       const creepRange = SLOW_PROGRESS_CAP - FAST_PROGRESS_CAP
       const p = creepElapsed >= MAX_CREEP_DURATION_MS
         ? SLOW_PROGRESS_CAP
-        : SLOW_PROGRESS_CAP - creepRange * Math.exp(-creepElapsed / CREEP_DECAY_MS)
-      setProgress(prev => Math.max(prev, Math.min(p, SLOW_PROGRESS_CAP)))
+        : FAST_PROGRESS_CAP + creepRange * (1 - Math.exp(-creepElapsed / CREEP_DECAY_MS))
+      updateProgress(p)
     }, 80)
 
     return () => {
