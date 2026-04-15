@@ -12,6 +12,11 @@ const STAGES = [
   'Final touches…',
 ]
 const GENERATION_TIMEOUT_MS = 90000
+const FAST_PROGRESS_MS = 10000
+const FAST_PROGRESS_CAP = 92
+const SLOW_PROGRESS_CAP = 99
+const CREEP_DECAY_MS = 8000
+const MAX_CREEP_DURATION_MS = GENERATION_TIMEOUT_MS - FAST_PROGRESS_MS
 
 export function CinematicLoader({ onDone }: { onDone: () => void }) {
   const router = useRouter()
@@ -30,12 +35,27 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
       setStageIdx(i => Math.min(i + 1, STAGES.length - 1))
     }, 2000)
 
-    // Progress bar: fill over ~10s, then hold at 92% until done
+    // Progress bar: fill quickly to 92%, then keep slowly moving so it doesn't look stuck
     const start = Date.now()
     const progressTimer = setInterval(() => {
+      const updateProgress = (value: number) => {
+        // Guard against any backwards movement from timer jitter/phase boundaries.
+        setProgress(prev => Math.max(prev, Math.min(value, SLOW_PROGRESS_CAP)))
+      }
+
       const elapsed = Date.now() - start
-      const p = Math.min((elapsed / 10000) * 92, 92)
-      setProgress(p)
+      if (elapsed <= FAST_PROGRESS_MS) {
+        const p = Math.min((elapsed / FAST_PROGRESS_MS) * FAST_PROGRESS_CAP, FAST_PROGRESS_CAP)
+        updateProgress(p)
+        return
+      }
+
+      const creepElapsed = Math.min(elapsed - FAST_PROGRESS_MS, MAX_CREEP_DURATION_MS)
+      const creepRange = SLOW_PROGRESS_CAP - FAST_PROGRESS_CAP
+      const p = creepElapsed >= MAX_CREEP_DURATION_MS
+        ? SLOW_PROGRESS_CAP
+        : FAST_PROGRESS_CAP + creepRange * (1 - Math.exp(-creepElapsed / CREEP_DECAY_MS))
+      updateProgress(p)
     }, 80)
 
     return () => {
@@ -138,7 +158,7 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
         color: 'rgba(196,195,227,0.25)',
         marginTop: 16,
       }}>
-        {Math.round(progress)}%
+        {progress.toFixed(1)}%
       </p>
     </div>
   )
