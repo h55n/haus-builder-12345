@@ -174,3 +174,57 @@ export function Stair() {
     </group>
   )
 }
+
+export function Refrigerator() {
+  return (
+    <group>
+      <Box w={0.92} h={1.95} d={0.74} color="#EDE8D0" />
+      <Box w={0.88} h={0.03} d={0.02} color="#C4C3E3" y={0.95} z={0.37} />
+      <Cyl r={0.015} h={0.2} color="#504E76" x={0.38} y={1.35} z={0.37} />
+      <Cyl r={0.015} h={0.2} color="#504E76" x={0.38} y={0.45} z={0.37} />
+    </group>
+  )
+}
+
+export function DiningChair() {
+  return (
+    <group>
+      <Box w={0.48} h={0.05} d={0.48} color="#D4C9A8" y={0.43} />
+      <Box w={0.48} h={0.45} d={0.05} color="#B8B4D0" y={0.45} z={-0.22} />
+      {[[-0.19, -0.19], [0.19, -0.19], [-0.19, 0.19], [0.19, 0.19]].map(([x, z], i) => (
+        <Cyl key={i} r={0.02} h={0.45} color="#8B6914" x={x} z={z} />
+      ))}
+    </group>
+  )
+}
+
+export function Mirror() {
+  return (
+    <group>
+      <Box w={0.8} h={1.6} d={0.04} color="#E8E4C8" />
+      <Box w={0.72} h={1.5} d={0.01} color="#C4C3E3" z={0.02} />
+    </group>
+  )
+}
+
+export function TableTop() {
+  return (
+    <group>
+      <Box w={1.8} h={0.06} d={0.9} color="#C4914A" y={0.72} />
+      {[[-0.82, 0.37], [0.82, 0.37], [-0.82, -0.37], [0.82, -0.37]].map(([x, z], i) => (
+        <Cyl key={i} r={0.03} h={0.72} color="#8B6914" x={x} z={z} />
+      ))}
+    </group>
+  )
+}
+
+export function KitchenTop() {
+  return (
+    <group>
+      <Box w={2.0} h={0.06} d={0.65} color="#D4C9A8" y={0.9} />
+      <Box w={1.9} h={0.9} d={0.6} color="#E8E4C8" />
+      <Cyl r={0.16} h={0.05} color="#504E76" y={0.93} x={0.45} z={0.1} />
+      <Box w={0.5} h={0.02} d={0.3} color="#C4C3E3" y={0.93} x={-0.45} z={0.05} />
+    </group>
+  )
+}

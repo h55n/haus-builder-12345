@@ -60,6 +60,17 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
 
   toDesignSpec: (): DesignSpec => {
     const { items } = get()
+    const openingItems = items.filter(i => i.assetType === 'opening')
+    const preferredWindow = openingItems.find(i => i.assetId === 'win-panorama')
+      ?? openingItems.find(i => i.assetId === 'win-large')
+      ?? openingItems.find(i => i.assetId === 'win-small')
+    const preferredDoor = openingItems.find(i => i.assetId === 'door-double')
+      ?? openingItems.find(i => i.assetId === 'door-single')
+
+    const windowWidth = preferredWindow?.dimensions.w ?? 1.2
+    const windowHeight = preferredWindow?.dimensions.h ?? 1.2
+    const doorWidth = preferredDoor?.dimensions.w ?? 0.9
+
     const rooms: Room3D[] = items
       .filter(i => i.assetType === 'room')
       .map(i => ({
@@ -70,8 +81,8 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         dimensions: { w: i.dimensions.w, d: i.dimensions.d },
         color: i.color,
         rotation: i.rotation,
-        windows: [{ wall: 'south', offsetX: 0.5, width: 1.2, height: 1.2, sillHeight: 0.9 }],
-        doors: [{ wall: 'north', offsetX: 0.5, width: 0.9, connectsTo: 'exterior', swingDirection: 'inward' as const }],
+        windows: [{ wall: 'south', offsetX: 0.5, width: windowWidth, height: windowHeight, sillHeight: 0.9 }],
+        doors: [{ wall: 'north', offsetX: 0.5, width: doorWidth, connectsTo: 'exterior', swingDirection: 'inward' as const }],
         furniture: items
           .filter(f => f.assetType === 'furniture')
           .map(f => ({

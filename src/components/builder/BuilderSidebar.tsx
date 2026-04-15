@@ -3,10 +3,6 @@ import { useState } from 'react'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { useBuilderStore } from '@/store/builderStore'
-import { v4 as uuid } from 'uuid'
-import type { BuilderItem } from '@/types'
-
-const PALETTE = ['#C4C3E3','#504E76','#FDF8E2','#A3B565','#FCDD9D','#F1642E','#B8B4D0','#E8E4C8']
 
 const CATEGORIES = {
   ROOMS: [
@@ -32,6 +28,11 @@ const CATEGORIES = {
     { id: 'bookshelf',       label: 'Bookshelf',      w: 0.9, d: 0.3, h: 1.8  },
     { id: 'plant',           label: 'Plant',          w: 0.4, d: 0.4, h: 1.2  },
     { id: 'lamp',            label: 'Floor Lamp',     w: 0.3, d: 0.3, h: 1.6  },
+    { id: 'refrigerator',    label: 'Refrigerator',   w: 0.92, d: 0.74, h: 1.95 },
+    { id: 'dining-chair',    label: 'Chair',          w: 0.5, d: 0.5, h: 0.9  },
+    { id: 'mirror',          label: 'Mirror',         w: 0.8, d: 0.08, h: 1.6  },
+    { id: 'table-top',       label: 'Table Top',      w: 1.8, d: 0.9, h: 0.78 },
+    { id: 'kitchen-top',     label: 'Kitchen Top',    w: 2.0, d: 0.65, h: 0.96 },
     { id: 'stair',           label: 'Staircase',      w: 1.0, d: 3.0, h: 3.0  },
   ],
   WALLS: [
@@ -44,6 +45,7 @@ const CATEGORIES = {
     { id: 'door-double', label: 'Dbl Door',   w: 1.6, d: 0.08, h: 2.2 },
     { id: 'win-small',   label: 'Window S',   w: 0.9, d: 0.08, h: 1.2 },
     { id: 'win-large',   label: 'Window L',   w: 1.6, d: 0.08, h: 1.4 },
+    { id: 'win-panorama',label: 'Window XL',  w: 2.8, d: 0.08, h: 1.8 },
   ],
 } as const
 
@@ -55,13 +57,24 @@ export function BuilderSidebar() {
   const { addItem, items } = useBuilderStore()
 
   const handleTypeAdd = () => {
-    const query = typeInput.toLowerCase().trim()
+    const query = normalize(typeInput)
     if (!query) return
+
+    const expandedQueries = [query, ...(TYPE_ALIASES[query] ?? [])]
+
     // Search all categories
     for (const [cat, assets] of Object.entries(CATEGORIES)) {
       for (const asset of assets) {
-        if (asset.label.toLowerCase().includes(query) || asset.id.includes(query)) {
-          const assetType = cat === 'ROOMS' ? 'room' : cat === 'FURNITURE' ? 'furniture' : 'wall'
+        const searchable = [asset.label, asset.id, ...asset.label.split(/\s+/)].map(normalize)
+        const matched = expandedQueries.some((q) => searchable.some((term) => term.includes(q) || q.includes(term)))
+        if (matched) {
+          const assetType = cat === 'ROOMS'
+            ? 'room'
+            : cat === 'FURNITURE'
+              ? 'furniture'
+              : cat === 'OPENINGS'
+                ? 'opening'
+                : 'wall'
           addItem({
             assetType,
             assetId: asset.id,
@@ -177,6 +190,24 @@ export function BuilderSidebar() {
       </div>
     </div>
   )
+}
+
+const TYPE_ALIASES: Record<string, string[]> = {
+  fridge: ['refrigerator'],
+  refrigerator: ['fridge'],
+  chair: ['diningchair', 'dining-chair'],
+  mirror: ['mirror'],
+  tabletop: ['table-top', 'table'],
+  table: ['tabletop', 'table-top'],
+  kitchentop: ['kitchen-top', 'kitchencounter', 'counter'],
+  counter: ['kitchen-top', 'kitchen-counter'],
+  kitchen: ['kitchen-top', 'kitchen-counter'],
+  bigwindow: ['windowxl', 'win-panorama', 'window'],
+  window: ['win-panorama', 'win-large', 'windowxl'],
+}
+
+function normalize(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '')
 }
 
 function DraggableAsset({ asset, category }: {

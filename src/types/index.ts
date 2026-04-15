@@ -19,7 +19,10 @@ export type RoomType =
 export type FurnitureType =
   | 'bed-king' | 'bed-single' | 'sofa' | 'desk' | 'dining-set'
   | 'kitchen-counter' | 'bathtub' | 'toilet' | 'wardrobe'
-  | 'bookshelf' | 'plant' | 'lamp' | 'stair' | 'generic'
+  | 'bookshelf' | 'plant' | 'lamp' | 'stair'
+  | 'refrigerator' | 'dining-chair' | 'mirror'
+  | 'table-top' | 'kitchen-top'
+  | 'generic'
 
 // ─── User Profile (quiz output) ─────────────────────────────────────
 export interface UserProfile {
