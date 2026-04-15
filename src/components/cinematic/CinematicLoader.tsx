@@ -16,6 +16,7 @@ const FAST_PROGRESS_MS = 10000
 const FAST_PROGRESS_CAP = 92
 const SLOW_PROGRESS_CAP = 99
 const CREEP_DECAY_MS = 8000
+const MAX_CREEP_DURATION_MS = GENERATION_TIMEOUT_MS - FAST_PROGRESS_MS
 
 export function CinematicLoader({ onDone }: { onDone: () => void }) {
   const router = useRouter()
@@ -44,9 +45,11 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
         return
       }
 
-      const creepElapsed = Math.min(elapsed - FAST_PROGRESS_MS, GENERATION_TIMEOUT_MS - FAST_PROGRESS_MS)
+      const creepElapsed = Math.min(elapsed - FAST_PROGRESS_MS, MAX_CREEP_DURATION_MS)
       const creepRange = SLOW_PROGRESS_CAP - FAST_PROGRESS_CAP
-      const p = SLOW_PROGRESS_CAP - creepRange * Math.exp(-creepElapsed / CREEP_DECAY_MS)
+      const p = creepElapsed >= MAX_CREEP_DURATION_MS
+        ? SLOW_PROGRESS_CAP
+        : SLOW_PROGRESS_CAP - creepRange * Math.exp(-creepElapsed / CREEP_DECAY_MS)
       setProgress(prev => Math.max(prev, Math.min(p, SLOW_PROGRESS_CAP)))
     }, 80)
 
