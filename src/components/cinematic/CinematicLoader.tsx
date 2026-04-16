@@ -74,8 +74,7 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
     if (design) {
       setProgress(100)
       setDone(true)
-      const timer = setTimeout(onDone, 600)
-      return () => clearTimeout(timer)
+      return
     }
     if (designError) {
       setError(designError)
@@ -88,6 +87,12 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
       return () => clearTimeout(timer)
     }
   }, [done, error, design, isGenerating, designError, onDone])
+
+  useEffect(() => {
+    if (!done || error) return
+    const timer = setTimeout(onDone, 600)
+    return () => clearTimeout(timer)
+  }, [done, error, onDone])
 
   useEffect(() => {
     if (done || error || design) return
