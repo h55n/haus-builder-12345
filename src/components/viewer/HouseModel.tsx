@@ -46,7 +46,7 @@ export function HouseModel() {
     let idleId: number | null = null
     let timeoutId: number | null = null
     if (typeof globalScope.requestIdleCallback === 'function') {
-      idleId = globalScope.requestIdleCallback(() => setPlanReady(true), { timeout: 80 })
+      idleId = globalScope.requestIdleCallback(() => setPlanReady(true), { timeout: 100 })
     } else {
       timeoutId = globalScope.setTimeout(() => setPlanReady(true), 32)
     }
@@ -266,7 +266,7 @@ function ExplodeLines({ floors }: { floors: number }) {
 
 function createDashedLine(height: number) {
   const points = [
-    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(),
     new THREE.Vector3(0, height, 0),
   ]
   const geo = new THREE.BufferGeometry().setFromPoints(points)

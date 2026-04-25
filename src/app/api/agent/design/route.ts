@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
       : `Create design guidance for this profile: ${JSON.stringify(profile)}`
 
     try {
-      await callMistral('mistral-large-latest', ARCHITECT_SYSTEM, [{ role: 'user', content: userMsg }], 0.25)
+      const guidance = await callMistral('mistral-large-latest', ARCHITECT_SYSTEM, [{ role: 'user', content: userMsg }], 0.25)
+      console.log('[architect] guidance chars:', guidance.length)
     } catch (err) {
       console.warn('[architect] guidance generation failed, using deterministic planner:', err)
     }
