@@ -157,9 +157,22 @@ export function HouseModel() {
   return (
     <group key={`house-v${version}`}>
       {!planReady && is2D && (
-        <Html center distanceFactor={20}>
-          <div className="glass-sm" style={{ padding: '8px 12px', borderRadius: 8, fontFamily: 'var(--font-space-mono)', fontSize: 10, letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
-            PREPARING 2D PLAN…
+        <Html center zIndexRange={[100, 0]}>
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+            background: 'var(--glass-bg)', backdropFilter: 'blur(12px)',
+            padding: '24px 32px', borderRadius: 16, border: '1px solid var(--glass-border)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
+            transform: 'scale(1)'
+          }}>
+            <div style={{
+              width: 24, height: 24, border: '3px solid var(--border)',
+              borderTopColor: 'var(--accent)', borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
+            <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: 12, letterSpacing: '0.1em', color: 'var(--text-primary)', textTransform: 'uppercase' }}>
+              Finalizing Blueprint…
+            </div>
           </div>
         </Html>
       )}

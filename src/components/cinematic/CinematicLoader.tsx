@@ -90,7 +90,8 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     if (!done || error) return
-    const timer = setTimeout(onDone, 600)
+    // Allow a smoother visual transition by taking a tiny bit longer to fade out
+    const timer = setTimeout(onDone, 800)
     return () => clearTimeout(timer)
   }, [done, error, onDone])
 
