@@ -56,7 +56,7 @@ export const useDesignStore = create<DesignState>((set) => ({
             r.id !== roomId ? r : {
               ...r,
               furniture: r.furniture.map(fi =>
-                fi.id !== furnitureId ? fi : { ...fi, rotation: ((fi.rotation + delta) % 360 + 360) % 360 }
+                fi.id !== furnitureId ? fi : { ...fi, rotation: normalizeAngle(fi.rotation + delta) }
               ),
             }
           ),
@@ -73,7 +73,7 @@ export const useDesignStore = create<DesignState>((set) => ({
         floors: s.design.floors.map(f => ({
           ...f,
           rooms: f.rooms.map(r =>
-            r.id !== roomId ? r : { ...r, rotation: ((r.rotation + delta) % 360 + 360) % 360 }
+            r.id !== roomId ? r : { ...r, rotation: normalizeAngle(r.rotation + delta) }
           ),
         })),
       },
