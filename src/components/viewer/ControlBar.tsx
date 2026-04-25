@@ -1,4 +1,5 @@
 'use client'
+import { useTransition } from 'react'
 import { useViewerStore } from '@/store/viewerStore'
 import { useDesignStore } from '@/store/designStore'
 import { RotateCcw, Layers, Eye, Boxes, Grid2x2, Download } from 'lucide-react'
@@ -13,6 +14,7 @@ const ICONS = {
 export function ControlBar() {
   const { viewMode, setViewMode, materialPreset, cycleMaterial, snapEnabled, toggleSnap } = useViewerStore()
   const design = useDesignStore(s => s.design)
+  const [, startTransition] = useTransition()
 
   const exportPNG = () => {
     const canvas = document.querySelector('canvas')
@@ -43,7 +45,7 @@ export function ControlBar() {
         <BarButton
           key={mode}
           active={viewMode === mode}
-          onClick={() => setViewMode(mode)}
+          onClick={() => startTransition(() => setViewMode(mode))}
           label={mode.toUpperCase().replace('-', ' ')}
           icon={ICONS[mode]}
         />

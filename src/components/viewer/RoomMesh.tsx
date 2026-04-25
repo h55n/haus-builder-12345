@@ -1,9 +1,11 @@
 import { memo, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { Html } from '@react-three/drei'
-import type { Room3D, MaterialPreset } from '@/types'
+import type { Room3D, MaterialPreset, FurnitureItem } from '@/types'
 import { WindowMesh, DoorMesh } from './WindowDoorMesh'
 import { FurnitureFactory } from './FurnitureFactory'
+import { useDesignStore } from '@/store/designStore'
+import { useViewerStore } from '@/store/viewerStore'
 
 const MATERIAL_TINT: Record<MaterialPreset, string> = {
   concrete: '#B8B8B8',
@@ -25,10 +27,11 @@ interface Props {
   materialPreset: MaterialPreset
   onSelect: () => void
   showLabel: boolean
+  onPointerDown?: (e: MouseEvent) => void
 }
 
 export const RoomMesh = memo(function RoomMesh({
-  room, floorY, selected, xray, materialPreset, onSelect, showLabel
+  room, floorY, selected, xray, materialPreset, onSelect, showLabel, onPointerDown
 }: Props) {
   const { dimensions: { w, d }, position, color } = room
   const h = 2.8 // default ceiling height, overridden by floor.height in parent
@@ -57,6 +60,7 @@ export const RoomMesh = memo(function RoomMesh({
     <group
       position={[position.x, floorY, position.z]}
       onClick={(e) => { e.stopPropagation(); onSelect() }}
+      onPointerDown={(e) => { e.stopPropagation(); onPointerDown?.(e.nativeEvent) }}
     >
       {/* Floor */}
       <mesh geometry={floorGeo} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -103,7 +107,12 @@ export const RoomMesh = memo(function RoomMesh({
 
       {/* Furniture */}
       {room.furniture.map(item => (
-        <FurnitureFactory key={item.id} item={item} floorY={0} />
+        <FurnitureDraggable
+          key={item.id}
+          item={item}
+          roomId={room.id}
+          roomDims={room.dimensions}
+        />
       ))}
 
       {/* Label */}
@@ -137,5 +146,55 @@ export const RoomMesh = memo(function RoomMesh({
   prev.floorY === next.floorY &&
   prev.showLabel === next.showLabel &&
   prev.room.position.x === next.room.position.x &&
-  prev.room.position.z === next.room.position.z
+  prev.room.position.z === next.room.position.z &&
+  prev.room.furniture === next.room.furniture
 )
+
+function FurnitureDraggable({ item, roomId, roomDims }: {
+  item: FurnitureItem
+  roomId: string
+  roomDims: { w: number; d: number }
+}) {
+  const { moveFurniture, rotateFurniture } = useDesignStore()
+  const { snapEnabled } = useViewerStore()
+  const isDragging = useRef(false)
+  const groundPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), [])
+  const dragPoint = useRef(new THREE.Vector3())
+  const dragOffset = useRef({ x: 0, z: 0 })
+  const snap = (v: number) => snapEnabled ? Math.round(v / 0.5) * 0.5 : v
+  const clamp = (v: number, half: number, objHalf: number) =>
+    Math.max(-(half - objHalf - 0.04), Math.min(half - objHalf - 0.04, v))
+
+  return (
+    <group
+      position={[item.position.x, 0, item.position.z]}
+      rotation={[0, (item.rotation * Math.PI) / 180, 0]}
+      onPointerDown={(e) => {
+        e.stopPropagation()
+        isDragging.current = false
+        if (e.ray.intersectPlane(groundPlane, dragPoint.current)) {
+          dragOffset.current = { x: dragPoint.current.x - item.position.x, z: dragPoint.current.z - item.position.z }
+        }
+      }}
+      onPointerMove={(e) => {
+        if ((e.buttons & 1) === 0) return
+        e.stopPropagation()
+        isDragging.current = true
+        if (e.ray.intersectPlane(groundPlane, dragPoint.current)) {
+          const nx = clamp(snap(dragPoint.current.x - dragOffset.current.x), roomDims.w / 2, item.dimensions.w / 2)
+          const nz = clamp(snap(dragPoint.current.z - dragOffset.current.z), roomDims.d / 2, item.dimensions.d / 2)
+          moveFurniture(roomId, item.id, nx, nz)
+        }
+      }}
+      onPointerUp={(e) => {
+        e.stopPropagation()
+        if (!isDragging.current) {
+          rotateFurniture(roomId, item.id, 90)
+        }
+        isDragging.current = false
+      }}
+    >
+      <FurnitureFactory item={{ ...item, position: { x: 0, z: 0 }, rotation: 0 }} floorY={0} />
+    </group>
+  )
+}

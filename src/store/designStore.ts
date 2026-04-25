@@ -10,6 +10,9 @@ interface DesignState {
   setGenerating: (v: boolean) => void
   setError: (e: string | null) => void
   clearDesign: () => void
+  moveFurniture: (roomId: string, furnitureId: string, x: number, z: number) => void
+  rotateFurniture: (roomId: string, furnitureId: string, delta: number) => void
+  rotateRoom: (roomId: string, delta: number) => void
 }
 
 export const useDesignStore = create<DesignState>((set) => ({
@@ -21,4 +24,59 @@ export const useDesignStore = create<DesignState>((set) => ({
   setGenerating: (v) => set({ isGenerating: v }),
   setError: (e) => set({ error: e }),
   clearDesign: () => set({ design: null, history: [] }),
+
+  moveFurniture: (roomId, furnitureId, x, z) => set(s => {
+    if (!s.design) return s
+    return {
+      design: {
+        ...s.design,
+        floors: s.design.floors.map(f => ({
+          ...f,
+          rooms: f.rooms.map(r =>
+            r.id !== roomId ? r : {
+              ...r,
+              furniture: r.furniture.map(fi =>
+                fi.id !== furnitureId ? fi : { ...fi, position: { x, z } }
+              ),
+            }
+          ),
+        })),
+      },
+    }
+  }),
+
+  rotateFurniture: (roomId, furnitureId, delta) => set(s => {
+    if (!s.design) return s
+    return {
+      design: {
+        ...s.design,
+        floors: s.design.floors.map(f => ({
+          ...f,
+          rooms: f.rooms.map(r =>
+            r.id !== roomId ? r : {
+              ...r,
+              furniture: r.furniture.map(fi =>
+                fi.id !== furnitureId ? fi : { ...fi, rotation: ((fi.rotation + delta) % 360 + 360) % 360 }
+              ),
+            }
+          ),
+        })),
+      },
+    }
+  }),
+
+  rotateRoom: (roomId, delta) => set(s => {
+    if (!s.design) return s
+    return {
+      design: {
+        ...s.design,
+        floors: s.design.floors.map(f => ({
+          ...f,
+          rooms: f.rooms.map(r =>
+            r.id !== roomId ? r : { ...r, rotation: ((r.rotation + delta) % 360 + 360) % 360 }
+          ),
+        })),
+      },
+    }
+  }),
 }))

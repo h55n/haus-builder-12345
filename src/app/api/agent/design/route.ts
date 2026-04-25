@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { callMistral } from '@/lib/mistral'
 import { ARCHITECT_SYSTEM } from '@/lib/architectPrompt'
 import { DesignSpecZ } from '@/lib/schemas'
+import { planLayout } from '@/lib/layoutFixer'
 import type { UserProfile } from '@/types'
 import { v4 as uuid } from 'uuid'
 
@@ -40,10 +41,10 @@ export async function POST(req: NextRequest) {
     if (!validated.success) {
       console.error('[architect] Zod fail:', validated.error.flatten())
       // return raw parsed anyway — let renderer handle gracefully
-      return NextResponse.json(parsed)
+      return NextResponse.json(planLayout(parsed as unknown as import('@/types').DesignSpec))
     }
 
-    return NextResponse.json(validated.data)
+    return NextResponse.json(planLayout(validated.data as unknown as import('@/types').DesignSpec))
   } catch (e) {
     console.error('[architect]', e)
     return NextResponse.json({ error: String(e) }, { status: 500 })

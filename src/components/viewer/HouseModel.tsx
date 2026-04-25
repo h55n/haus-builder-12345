@@ -1,15 +1,33 @@
 'use client'
-import { useRef } from 'react'
+import { useEffect } from 'react'
 import { useSpring, animated } from '@react-spring/three'
 import { Html } from '@react-three/drei'
 import { useDesignStore } from '@/store/designStore'
 import { useViewerStore } from '@/store/viewerStore'
 import { RoomMesh } from './RoomMesh'
 
-export function HouseModel() {
+interface HouseModelProps {
+  onRoomPointerDown: (roomId: string, roomPos: { x: number; z: number }, e: MouseEvent) => void
+  onPointerMove: (e: MouseEvent) => void
+  onPointerUp: () => void
+}
+
+export function HouseModel({ onRoomPointerDown }: HouseModelProps) {
   const design = useDesignStore(s => s.design)
+  const rotateRoom = useDesignStore(s => s.rotateRoom)
   const version = design?.version ?? 0
   const { viewMode, materialPreset, selectedId, setSelected } = useViewerStore()
+
+  // R-key rotates the currently selected room by 90°
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== 'r') return
+      if (!selectedId) return
+      rotateRoom(selectedId, 90)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [selectedId, rotateRoom])
 
   if (!design) return null
 
@@ -44,6 +62,7 @@ export function HouseModel() {
               materialPreset={materialPreset}
               onSelect={() => setSelected(selectedId === room.id ? null : room.id)}
               showLabel={isExploded || isXray}
+              onPointerDown={(e: MouseEvent) => onRoomPointerDown(room.id, room.position, e)}
             />
           ))}
 
