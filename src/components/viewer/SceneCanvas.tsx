@@ -1,11 +1,9 @@
 'use client'
-import { Suspense, useRef, useCallback } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
+import { Suspense, useRef } from 'react'
+import { Canvas } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei'
 import * as THREE from 'three'
 import { useViewerStore } from '@/store/viewerStore'
-import { useDesignStore } from '@/store/designStore'
-import { useDesignInteraction } from '@/hooks/useDesignInteraction'
 import { HouseModel } from './HouseModel'
 
 function Scene() {
@@ -44,10 +42,12 @@ function Scene() {
 
       <OrbitControls
         makeDefault
-        enableDamping
+        enableDamping={!is2D}
         dampingFactor={0.04}
+        minPolarAngle={is2D ? 0 : 0}
         maxPolarAngle={is2D ? 0 : Math.PI / 2 - 0.02}
         enableRotate={!is2D}
+        enablePan
       />
 
       <HouseModel />
@@ -62,6 +62,7 @@ interface Props {
 export function SceneCanvas({ canvasRootId = 'canvas-root' }: Props) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const { viewMode } = useViewerStore()
+  const is2D = viewMode === '2d'
 
   return (
     <div
@@ -70,10 +71,11 @@ export function SceneCanvas({ canvasRootId = 'canvas-root' }: Props) {
       style={{ width: '100%', height: '100%', position: 'relative' }}
     >
       <Canvas
-        shadows="soft"
-        dpr={[1, 1.5]}
+        shadows={is2D ? false : 'soft'}
+        dpr={is2D ? 1 : [1, 1.5]}
+        frameloop={is2D ? 'demand' : 'always'}
         gl={{
-          antialias: true,
+          antialias: !is2D,
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: 1.08,
         }}

@@ -2,6 +2,7 @@
 import { useViewerStore } from '@/store/viewerStore'
 import { useDesignStore } from '@/store/designStore'
 import { RotateCcw, Layers, Eye, Boxes, Grid2x2, Download } from 'lucide-react'
+import { rebuildDoorsForRooms } from '@/lib/layoutPlanner'
 
 const ICONS = {
   '3d':      <RotateCcw size={16} />,
@@ -11,8 +12,31 @@ const ICONS = {
 }
 
 export function ControlBar() {
-  const { viewMode, setViewMode, materialPreset, cycleMaterial, snapEnabled, toggleSnap } = useViewerStore()
+  const { viewMode, setViewMode, materialPreset, cycleMaterial, snapEnabled, toggleSnap, selectedId, selectedType } = useViewerStore()
   const design = useDesignStore(s => s.design)
+  const setDesign = useDesignStore(s => s.setDesign)
+
+  const rotateSelected = () => {
+    if (!design || !selectedId || !selectedType) return
+    const next = {
+      ...design,
+      version: design.version + 1,
+      floors: design.floors.map((floor) => ({
+        ...floor,
+        rooms: selectedType === 'room'
+          ? rebuildDoorsForRooms(floor.rooms.map((room) => room.id === selectedId
+            ? { ...room, rotation: ((Math.round(room.rotation / 90) * 90 + 90) % 360 + 360) % 360 }
+            : room))
+          : floor.rooms.map((room) => ({
+            ...room,
+            furniture: room.furniture.map((item) => item.id === selectedId
+              ? { ...item, rotation: ((Math.round(item.rotation / 90) * 90 + 90) % 360 + 360) % 360 }
+              : item),
+          })),
+      })),
+    }
+    setDesign(next)
+  }
 
   const exportPNG = () => {
     const canvas = document.querySelector('canvas')
@@ -65,6 +89,13 @@ export function ControlBar() {
         onClick={toggleSnap}
         label="SNAP"
         icon={<Grid2x2 size={16} />}
+      />
+
+      <BarButton
+        active={false}
+        onClick={rotateSelected}
+        label="ROTATE 90°"
+        icon={<RotateCcw size={16} />}
       />
 
       <Divider />
