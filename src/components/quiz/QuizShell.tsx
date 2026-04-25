@@ -29,8 +29,14 @@ export function QuizShell() {
   useEffect(() => {
     if (isComplete && profile && !hasNavigated.current) {
       hasNavigated.current = true
-      router.push('/viewer?generating=true')
-      generateDesign(profile)
+      ;(async () => {
+        const ready = await generateDesign(profile)
+        if (ready) {
+          router.push('/viewer?generating=true')
+        } else {
+          hasNavigated.current = false
+        }
+      })()
     }
   }, [isComplete, profile, router, generateDesign])
 

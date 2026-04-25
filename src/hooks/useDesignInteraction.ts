@@ -32,7 +32,7 @@ export function useDesignInteraction(gl: THREE.WebGLRenderer | null, camera: THR
 
   const onPointerDown = useCallback((roomId: string, roomPos: { x: number; z: number }, event: MouseEvent) => {
     isDragging.current = false
-    setSelected(roomId)
+    setSelected(roomId, 'room')
     const pt = getFloorIntersect(event)
     if (pt) {
       dragOffset.current = { x: pt.x - roomPos.x, z: pt.z - roomPos.z }

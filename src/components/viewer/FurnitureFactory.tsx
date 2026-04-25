@@ -8,17 +8,40 @@ import {
 interface Props {
   item: FurnitureItem
   floorY: number
+  selected?: boolean
+  onPointerDown?: (e: any) => void
+  onPointerMove?: (e: any) => void
+  onPointerUp?: (e: any) => void
+  onClick?: (e: any) => void
 }
 
-export const FurnitureFactory = memo(function FurnitureFactory({ item, floorY }: Props) {
+export const FurnitureFactory = memo(function FurnitureFactory({
+  item,
+  floorY,
+  selected = false,
+  onPointerDown,
+  onPointerMove,
+  onPointerUp,
+  onClick,
+}: Props) {
   const { position, rotation } = item
 
   return (
     <group
       position={[position.x, floorY, position.z]}
       rotation={[0, (rotation * Math.PI) / 180, 0]}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onClick={onClick}
     >
       <FurniturePiece item={item} />
+      {selected && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+          <ringGeometry args={[Math.max(item.dimensions.w, item.dimensions.d) * 0.55, Math.max(item.dimensions.w, item.dimensions.d) * 0.62, 24]} />
+          <meshBasicMaterial color="#1A56DB" transparent opacity={0.75} />
+        </mesh>
+      )}
     </group>
   )
 })

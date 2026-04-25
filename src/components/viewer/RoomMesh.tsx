@@ -1,6 +1,7 @@
-import { memo, useMemo, useRef } from 'react'
+import { memo, useMemo } from 'react'
 import * as THREE from 'three'
 import { Html } from '@react-three/drei'
+import { ThreeEvent } from '@react-three/fiber'
 import type { Room3D, MaterialPreset } from '@/types'
 import { WindowMesh, DoorMesh } from './WindowDoorMesh'
 import { FurnitureFactory } from './FurnitureFactory'
@@ -20,18 +21,44 @@ const MATERIAL_ROUGHNESS: Record<MaterialPreset, number> = {
 interface Props {
   room: Room3D
   floorY: number
+  roomHeight: number
   selected: boolean
+  selectedFurnitureId?: string | null
   xray: boolean
   materialPreset: MaterialPreset
   onSelect: () => void
+  onRoomPointerDown?: (e: ThreeEvent<PointerEvent>, room: Room3D) => void
+  onRoomPointerMove?: (e: ThreeEvent<PointerEvent>, room: Room3D) => void
+  onRoomPointerUp?: (e: ThreeEvent<PointerEvent>, room: Room3D) => void
+  onFurnitureSelect?: (roomId: string, furnitureId: string) => void
+  onFurniturePointerDown?: (e: ThreeEvent<PointerEvent>, room: Room3D, furnitureId: string) => void
+  onFurniturePointerMove?: (e: ThreeEvent<PointerEvent>, room: Room3D, furnitureId: string) => void
+  onFurniturePointerUp?: (e: ThreeEvent<PointerEvent>, room: Room3D, furnitureId: string) => void
+  showFurniture?: boolean
   showLabel: boolean
 }
 
 export const RoomMesh = memo(function RoomMesh({
-  room, floorY, selected, xray, materialPreset, onSelect, showLabel
+  room,
+  floorY,
+  roomHeight,
+  selected,
+  selectedFurnitureId,
+  xray,
+  materialPreset,
+  onSelect,
+  onRoomPointerDown,
+  onRoomPointerMove,
+  onRoomPointerUp,
+  onFurnitureSelect,
+  onFurniturePointerDown,
+  onFurniturePointerMove,
+  onFurniturePointerUp,
+  showFurniture = true,
+  showLabel,
 }: Props) {
   const { dimensions: { w, d }, position, color } = room
-  const h = 2.8 // default ceiling height, overridden by floor.height in parent
+  const h = roomHeight
 
   const floorGeo   = useMemo(() => new THREE.PlaneGeometry(w, d), [w, d])
   const ceilGeo    = useMemo(() => new THREE.PlaneGeometry(w, d), [w, d])
@@ -57,6 +84,9 @@ export const RoomMesh = memo(function RoomMesh({
     <group
       position={[position.x, floorY, position.z]}
       onClick={(e) => { e.stopPropagation(); onSelect() }}
+      onPointerDown={(e) => onRoomPointerDown?.(e, room)}
+      onPointerMove={(e) => onRoomPointerMove?.(e, room)}
+      onPointerUp={(e) => onRoomPointerUp?.(e, room)}
     >
       {/* Floor */}
       <mesh geometry={floorGeo} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -102,8 +132,20 @@ export const RoomMesh = memo(function RoomMesh({
       ))}
 
       {/* Furniture */}
-      {room.furniture.map(item => (
-        <FurnitureFactory key={item.id} item={item} floorY={0} />
+      {showFurniture && room.furniture.map(item => (
+        <FurnitureFactory
+          key={item.id}
+          item={item}
+          floorY={0}
+          selected={selectedFurnitureId === item.id}
+          onClick={(e) => {
+            e.stopPropagation()
+            onFurnitureSelect?.(room.id, item.id)
+          }}
+          onPointerDown={(e) => onFurniturePointerDown?.(e as ThreeEvent<PointerEvent>, room, item.id)}
+          onPointerMove={(e) => onFurniturePointerMove?.(e as ThreeEvent<PointerEvent>, room, item.id)}
+          onPointerUp={(e) => onFurniturePointerUp?.(e as ThreeEvent<PointerEvent>, room, item.id)}
+        />
       ))}
 
       {/* Label */}
@@ -128,14 +170,4 @@ export const RoomMesh = memo(function RoomMesh({
       )}
     </group>
   )
-}, (prev, next) =>
-  prev.room.id === next.room.id &&
-  prev.room.color === next.room.color &&
-  prev.selected === next.selected &&
-  prev.xray === next.xray &&
-  prev.materialPreset === next.materialPreset &&
-  prev.floorY === next.floorY &&
-  prev.showLabel === next.showLabel &&
-  prev.room.position.x === next.room.position.x &&
-  prev.room.position.z === next.room.position.z
-)
+})
