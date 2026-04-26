@@ -150,7 +150,7 @@ export const RoomMesh = memo(function RoomMesh({
 
       {/* Label */}
       {showLabel && (
-        <Html position={[0, h + 0.3, 0]} center distanceFactor={14}>
+        <Html position={[0, h + 0.3, 0]} center zIndexRange={[10, 0]}>
           <div style={{
             fontFamily: 'var(--font-space-mono)',
             fontSize: 10, letterSpacing: '0.1em',
@@ -163,6 +163,8 @@ export const RoomMesh = memo(function RoomMesh({
             whiteSpace: 'nowrap',
             pointerEvents: 'none',
             textTransform: 'uppercase',
+            // Hardcode scaling to avoid the massive text bug with OrthographicCamera + distanceFactor
+            transform: 'scale(1)',
           }}>
             {room.label}
           </div>

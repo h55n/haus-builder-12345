@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDesignStore } from '@/store/designStore'
+import { useViewerStore } from '@/store/viewerStore'
 
 const STAGES = [
   'Reading your brief…',
@@ -23,6 +24,7 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
   const design = useDesignStore(s => s.design)
   const isGenerating = useDesignStore(s => s.isGenerating)
   const designError = useDesignStore(s => s.error)
+  const sceneRendered = useViewerStore(s => s.sceneRendered)
   const [stageIdx, setStageIdx] = useState(0)
   const [progress, setProgress] = useState(0)
   const [done, setDone] = useState(false)
@@ -71,7 +73,7 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
       sawGenerating.current = true
       return
     }
-    if (design) {
+    if (design && sceneRendered) {
       setProgress(100)
       setDone(true)
       return
@@ -86,11 +88,12 @@ export function CinematicLoader({ onDone }: { onDone: () => void }) {
       }, 300)
       return () => clearTimeout(timer)
     }
-  }, [done, error, design, isGenerating, designError, onDone])
+  }, [done, error, design, sceneRendered, isGenerating, designError, onDone])
 
   useEffect(() => {
     if (!done || error) return
-    const timer = setTimeout(onDone, 600)
+    // Allow a smoother visual transition by taking a tiny bit longer to fade out
+    const timer = setTimeout(onDone, 800)
     return () => clearTimeout(timer)
   }, [done, error, onDone])
 

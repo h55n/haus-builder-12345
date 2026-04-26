@@ -1,10 +1,37 @@
 'use client'
-import { Suspense, useRef } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Suspense, useEffect, useRef } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei'
 import * as THREE from 'three'
 import { useViewerStore } from '@/store/viewerStore'
 import { HouseModel } from './HouseModel'
+
+function SceneReadyNotifier() {
+  const { setSceneRendered } = useViewerStore()
+  const { gl } = useThree()
+
+  useEffect(() => {
+    let frameId: number
+    let frames = 0
+    // Wait for a few frames to ensure shaders are compiled and geometry is rendered
+    const checkReady = () => {
+      if (frames > 3) {
+        setSceneRendered(true)
+      } else {
+        frames++
+        frameId = requestAnimationFrame(checkReady)
+      }
+    }
+    frameId = requestAnimationFrame(checkReady)
+
+    return () => {
+      cancelAnimationFrame(frameId)
+      setSceneRendered(false)
+    }
+  }, [setSceneRendered, gl])
+
+  return null
+}
 
 function Scene() {
   const { viewMode } = useViewerStore()
@@ -51,6 +78,7 @@ function Scene() {
       />
 
       <HouseModel />
+      <SceneReadyNotifier />
     </>
   )
 }
