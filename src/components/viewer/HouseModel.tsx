@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { useSpring, animated } from '@react-spring/three'
 import { Html } from '@react-three/drei'
 import { ThreeEvent } from '@react-three/fiber'
@@ -22,7 +22,6 @@ export function HouseModel() {
   const setDesign = useDesignStore((s) => s.setDesign)
   const version = design?.version ?? 0
   const { viewMode, materialPreset, selectedId, selectedType, setSelected, snapEnabled } = useViewerStore()
-  const [planReady, setPlanReady] = useState(viewMode !== '2d')
   const dragState = useRef<{
     kind: 'room' | 'furniture'
     floorLevel: number
@@ -35,30 +34,6 @@ export function HouseModel() {
   const isExploded = viewMode === 'exploded'
   const isXray = viewMode === 'xray'
   const is2D = viewMode === '2d'
-
-  useEffect(() => {
-    if (viewMode !== '2d') {
-      setPlanReady(true)
-      return
-    }
-    setPlanReady(false)
-    const globalScope = globalThis as any
-    let idleId: number | null = null
-    let timeoutId: number | null = null
-    if (typeof globalScope.requestIdleCallback === 'function') {
-      idleId = globalScope.requestIdleCallback(() => setPlanReady(true), { timeout: 100 })
-    } else {
-      timeoutId = globalScope.setTimeout(() => setPlanReady(true), 32)
-    }
-    return () => {
-      if (idleId !== null && typeof globalScope.cancelIdleCallback === 'function') {
-        globalScope.cancelIdleCallback(idleId)
-      }
-      if (timeoutId !== null) {
-        globalScope.clearTimeout(timeoutId)
-      }
-    }
-  }, [viewMode])
 
   if (!design) return null
 
@@ -156,26 +131,6 @@ export function HouseModel() {
 
   return (
     <group key={`house-v${version}`}>
-      {!planReady && is2D && (
-        <Html center zIndexRange={[100, 0]}>
-          <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
-            background: 'var(--glass-bg)', backdropFilter: 'blur(12px)',
-            padding: '24px 32px', borderRadius: 16, border: '1px solid var(--glass-border)',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.05)',
-            transform: 'scale(1)'
-          }}>
-            <div style={{
-              width: 24, height: 24, border: '3px solid var(--border)',
-              borderTopColor: 'var(--accent)', borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }} />
-            <div style={{ fontFamily: 'var(--font-space-mono)', fontSize: 12, letterSpacing: '0.1em', color: 'var(--text-primary)', textTransform: 'uppercase' }}>
-              Finalizing Blueprint…
-            </div>
-          </div>
-        </Html>
-      )}
       {design.floors.map((floor, fi) => (
         <FloorGroup
           key={floor.level}
@@ -183,7 +138,7 @@ export function HouseModel() {
           exploded={isExploded}
           explodeOffset={fi * 6.5}
         >
-          {(planReady || !is2D) && floor.rooms.map((room) => (
+          {floor.rooms.map((room) => (
             <RoomMesh
               key={room.id}
               room={room}
