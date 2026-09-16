@@ -40,14 +40,14 @@
 ### Prerequisites
 
 - Node.js 18+
-- A [Mistral AI](https://console.mistral.ai/) API key
+- A Mistral AI API key
 
 ### Local Setup
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/haus-builder.git
-cd haus-builder
+git clone https://github.com/h55n/haus-builder-12345.git
+cd haus-builder-12345
 
 # 2. Install dependencies
 npm install
@@ -67,7 +67,7 @@ MISTRAL_API_KEY=your_mistral_api_key_here
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open `http://localhost:3000` in your browser.
 
 ---
 
@@ -75,25 +75,25 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 | Variable | Description | Required |
 |---|---|---|
-| `MISTRAL_API_KEY` | Primary Mistral AI API key from [console.mistral.ai](https://console.mistral.ai/) | ✅ Yes* |
-| `MISTRAL_KEY` | Legacy fallback variable name (used if `MISTRAL_API_KEY` is unset or empty) | No |
+| `MISTRAL_API_KEY` | Primary Mistral AI API key | Yes* |
+| `MISTRAL_KEY` | Legacy fallback variable name | No |
 
-> **Security:** Never commit `.env.local` or any file containing real API keys. The `.gitignore` excludes all `.env*` files except `.env.example`.
+> Never commit `.env.local` or any file containing real API keys. The `.gitignore` excludes environment files except the example template.
 >
-> \* Configure at least one of `MISTRAL_API_KEY` or `MISTRAL_KEY`.
+> *Configure at least one of `MISTRAL_API_KEY` or `MISTRAL_KEY`.
 
 ---
 
 ## Project Structure
 
-```
-haus-builder/
+```text
+haus-builder-12345/
 ├── src/
 │   └── app/
 │       ├── api/          # API routes (Mistral AI calls)
 │       ├── builder/      # Builder mode page
 │       └── ...
-├── .env.example          # Template — copy to .env.local
+├── .env.example
 ├── .gitignore
 ├── next.config.js
 ├── tailwind.config.ts
@@ -102,20 +102,9 @@ haus-builder/
 
 ---
 
-## Deployment (Vercel)
+## Deployment
 
-1. Push this repo to GitHub
-2. Import project at [vercel.com/new](https://vercel.com/new)
-3. Keep defaults:
-   - **Framework Preset:** Next.js
-   - **Build Command:** `next build`
-   - **Output Directory:** `.next`
-4. In **Settings → Environment Variables**, add:
-   - `MISTRAL_API_KEY` (or `MISTRAL_KEY`) for Production / Preview / Development as needed
-5. Deploy
-6. Verify:
-   - `npm run build` passes locally before pushing
-   - Vercel deployment logs show successful `next build`
+For Vercel deployment, import this repository, keep the default Next.js build settings, and configure `MISTRAL_API_KEY` as a deployment environment variable. Run `npm run build` locally before pushing release changes.
 
 ---
 
